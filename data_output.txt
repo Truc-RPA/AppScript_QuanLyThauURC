@@ -1,0 +1,26 @@
+A2 = 2026-03-13 02:04:51.891000
+B2 = Công ty trực
+C2 = Sản xuất
+D2 = Nguyễn Văn A
+E2 = Line 1, Line 2
+F2 = 2026-03-13 00:00:00
+G2 = 2026-03-14 00:00:00
+H2 = fffffffffff
+I2 = Đã xác minh
+J2 = https://drive.google.com/drive/folders/1Hnp8154_D-mjehhcDPAl8FiviS_llk5w
+K2 = https://drive.google.com/file/d/1R0w5otO3DBfeRnGMoDVDNJElRRieR3kA/view?usp=drivesdk
+L2 = False
+---
+A3 = 2026-03-13 07:19:27.785000
+B3 = cty test 2
+C3 = Kho vận
+D3 = Trần Thị B
+E3 = Kho A, Kho B
+F3 = 2026-03-14 00:00:00
+G3 = 2026-03-15 00:00:00
+H3 = eeeeeeeeeee
+I3 = Đã xác minh
+J3 = https://drive.google.com/drive/folders/1I-15CoqLSvN7Yz4v4d-JLWRBSMEX41OK
+K3 = https://drive.google.com/file/d/1_cPXW9pD-zSjvA_X7byhUVx-vSUDYzfD/view?usp=drivesdk
+L3 = False
+---

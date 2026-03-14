@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #f0f4f8; min-height: 100vh; }
+
+/* Tab animations */
+.tab-btn { transition: all 0.3s cubic-bezier(0.4,0,0.2,1); position: relative; overflow: hidden; }
+.tab-btn::after { content:''; position:absolute; bottom:0; left:50%; width:0; height:3px; background:#dc2626; transition:all 0.3s ease; transform:translateX(-50%); border-radius:3px 3px 0 0; }
+.tab-btn.active { color:#dc2626; background:rgba(220,38,38,0.08); }
+.tab-btn.active::after { width:60%; }
+.tab-btn:hover:not(.active) { color:#ef4444; background:rgba(220,38,38,0.04); }
+
+/* Tab content transitions */
+.tab-content { display:none; animation:fadeSlideIn 0.4s ease; }
+.tab-content.active { display:block; }
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+/* Toast */
+.toast { animation: toastIn 0.4s ease, toastOut 0.4s ease 3.6s forwards; }
+@keyframes toastIn { from { transform:translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@keyframes toastOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(120%); opacity:0; } }
+
+/* Spinner */
+.spinner { width:40px;height:40px;border:4px solid #e5e7eb;border-top-color:#dc2626;border-radius:50%;animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Card hover */
+.card-hover { transition: all 0.25s ease; }
+.card-hover:hover { transform:translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+
+/* Form input focus */
+.form-input { transition: all 0.2s ease; }
+.form-input:focus { box-shadow: 0 0 0 3px rgba(220,38,38,0.15); }
+
+/* Badge pulse */
+.badge-pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:#f1f5f9; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
+
+/* Table row hover */
+.table-row { transition: background 0.15s ease; }
+.table-row:hover { background: #f8fafc; }
+
+/* Button press */
+.btn-press:active { transform: scale(0.97); }
