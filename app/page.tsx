@@ -190,7 +190,7 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
         if (match) {
             setForm(prev => ({
                 ...prev,
-                nguoiPhuTrach: match.nguoiPhuTrach || '',
+                nguoiPhuTrach: match.name || '',
                 khuVuc: match.khuVuc || '',
             }));
         }

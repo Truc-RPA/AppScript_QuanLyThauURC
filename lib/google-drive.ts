@@ -32,9 +32,7 @@ export async function uploadFile(
     buffer: Buffer,
     folderId: string
 ): Promise<{ id: string; url: string }> {
-    const stream = new Readable();
-    stream.push(buffer);
-    stream.push(null);
+    const stream = Readable.from(buffer);
 
     const res = await drive.files.create({
         requestBody: {
