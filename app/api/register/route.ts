@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
                     const uploadedLinks = [];
                     for (const f of files) {
                         try {
-                            const buffer = Buffer.from(f.data, 'base64');
+                            const base64Data = f.data.includes(',') ? f.data.split(',')[1] : f.data;
+                            const buffer = Buffer.from(base64Data, 'base64');
                             const mimeType = f.name.endsWith('.pdf') ? 'application/pdf' :
                                 (f.name.endsWith('.png') ? 'image/png' : 'image/jpeg');
                             const file = await uploadFile(f.name, mimeType, buffer, folder.id);
