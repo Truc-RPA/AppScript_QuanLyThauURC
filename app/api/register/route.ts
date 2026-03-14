@@ -6,13 +6,8 @@ import { createFolder, uploadFile, shareWithEmail } from '@/lib/google-drive';
 
 export async function POST(req: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.email) {
-            return NextResponse.json({ success: false, message: 'Chưa đăng nhập' }, { status: 401 });
-        }
-
         const body = await req.json();
-        const { tenNhaThau, phongBan, khuVuc, tuNgay, denNgay, hangMuc, fileData, fileName } = body;
+        const { tenNhaThau, phongBan, nguoiPhuTrach, khuVuc, tuNgay, denNgay, hangMuc, files } = body;
 
         // Validate
         if (!tenNhaThau || !phongBan || !khuVuc || !tuNgay || !denNgay || !hangMuc) {
@@ -30,12 +25,21 @@ export async function POST(req: NextRequest) {
                 const folder = await createFolder(folderName, FOLDER_ID);
                 folderLink = folder.url;
 
-                // Upload file nếu có
-                if (fileData && fileName) {
-                    const buffer = Buffer.from(fileData, 'base64');
-                    const mimeType = fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg';
-                    const file = await uploadFile(fileName, mimeType, buffer, folder.id);
-                    fileLink = file.url;
+                // Upload files nếu có
+                if (files && files.length > 0) {
+                    const uploadedLinks = [];
+                    for (const f of files) {
+                        try {
+                            const buffer = Buffer.from(f.data, 'base64');
+                            const mimeType = f.name.endsWith('.pdf') ? 'application/pdf' :
+                                (f.name.endsWith('.png') ? 'image/png' : 'image/jpeg');
+                            const file = await uploadFile(f.name, mimeType, buffer, folder.id);
+                            uploadedLinks.push(file.url);
+                        } catch (e) {
+                            console.error('Lỗi upload file:', f.name, e);
+                        }
+                    }
+                    fileLink = uploadedLinks.join('\\n');
                 }
 
                 // Chia sẻ folder cho người phụ trách
@@ -54,7 +58,6 @@ export async function POST(req: NextRequest) {
 
         // Ghi vào sheet Data
         const timestamp = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-        const nguoiPhuTrach = session.user.name || session.user.email;
         const newRow = [
             timestamp,       // Timestamp
             tenNhaThau,      // Tên NT
