@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { appendRow, getSheetData } from '@/lib/google-sheets';
-import { createFolder, uploadFile, shareWithEmail } from '@/lib/google-drive';
 
 export async function POST(req: NextRequest) {
     try {
@@ -18,42 +17,31 @@ export async function POST(req: NextRequest) {
         let folderLink = '';
         let fileLink = '';
 
-        // Tạo folder trên Drive
+        // Tạo folder trên Drive qua Webhook (Gas Web App)
         if (FOLDER_ID && FOLDER_ID !== 'YOUR_DRIVE_FOLDER_ID_HERE') {
             try {
                 const folderName = `${tenNhaThau}_${new Date().toISOString().split('T')[0]}`;
-                const folder = await createFolder(folderName, FOLDER_ID);
-                folderLink = folder.url;
+                const payload = {
+                    parentFolderId: FOLDER_ID,
+                    folderName: folderName,
+                    files: files || []
+                };
 
-                // Upload files nếu có
-                if (files && files.length > 0) {
-                    const uploadedLinks = [];
-                    for (const f of files) {
-                        try {
-                            const base64Data = f.data.includes(',') ? f.data.split(',')[1] : f.data;
-                            const buffer = Buffer.from(base64Data, 'base64');
-                            const mimeType = f.name.endsWith('.pdf') ? 'application/pdf' :
-                                (f.name.endsWith('.png') ? 'image/png' : 'image/jpeg');
-                            const file = await uploadFile(f.name, mimeType, buffer, folder.id);
-                            uploadedLinks.push(file.url);
-                        } catch (e) {
-                            console.error('Lỗi upload file:', f.name, e);
-                        }
-                    }
-                    fileLink = uploadedLinks.join('\\n');
-                }
+                const webhookUrl = process.env.GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbxX8IWwSIRig0qqwLItjf64vq1mQfZ_UVWLHymw1iVluRYpSFBT5fOHAxBPv62o3rP23Q/exec';
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
 
-                // Chia sẻ folder cho người phụ trách
-                const settingsRows = await getSheetData('CaiDat');
-                for (let i = 1; i < settingsRows.length; i++) {
-                    const row = settingsRows[i];
-                    if (row && row[0] === phongBan && row[2]) {
-                        try { await shareWithEmail(folder.id, row[2].trim()); } catch (e) { /* ignore */ }
-                    }
+                const data = await response.json();
+                if (data.folderUrl || data.success) {
+                    folderLink = data.folderUrl || '';
+                    fileLink = (data.fileUrls || []).join('\\n');
+                } else {
+                    console.error('GAS Webhook Error:', data.error);
                 }
             } catch (driveError: any) {
-                console.error('Drive error:', driveError);
-                // Tiếp tục lưu data dù Drive lỗi
+                console.error('Drive Webhook error:', driveError);
             }
         }
 
