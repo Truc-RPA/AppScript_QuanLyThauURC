@@ -241,7 +241,7 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
                     <SelectField label="Phòng ban" required value={form.phongBan} onChange={v => setForm({ ...form, phongBan: v })} options={departments} placeholder="-- Chọn phòng ban --" />
                     <ReadOnlyField label="Người phụ trách" value={form.nguoiPhuTrach} placeholder="Tự động hiển thị khi chọn phòng ban" icon="👤" />
                     <ReadOnlyField label="Khu vực thi công" value={form.khuVuc} placeholder="Tự động hiển thị khi chọn phòng ban" icon="📍" />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Từ ngày <span className="text-red-500">*</span></label>
                             <input type="date" required value={form.tuNgay} onChange={e => setForm({ ...form, tuNgay: e.target.value })} className="form-input w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 bg-gray-50/50" /></div>
                         <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Đến ngày <span className="text-red-500">*</span></label>
