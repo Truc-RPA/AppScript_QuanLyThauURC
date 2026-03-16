@@ -21,10 +21,21 @@ export async function POST(req: NextRequest) {
         if (FOLDER_ID && FOLDER_ID !== 'YOUR_DRIVE_FOLDER_ID_HERE') {
             try {
                 const folderName = `${tenNhaThau}_${new Date().toISOString().split('T')[0]}`;
+
+                const formattedFiles = (files || []).map((f: any) => {
+                    const mimeType = f.name.endsWith('.pdf') ? 'application/pdf' :
+                        (f.name.endsWith('.png') ? 'image/png' : 'image/jpeg');
+                    return {
+                        name: f.name,
+                        base64: f.data,
+                        mimeType: mimeType
+                    };
+                });
+
                 const payload = {
                     parentFolderId: FOLDER_ID,
                     folderName: folderName,
-                    files: files || []
+                    files: formattedFiles
                 };
 
                 const webhookUrl = process.env.GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbxX8IWwSIRig0qqwLItjf64vq1mQfZ_UVWLHymw1iVluRYpSFBT5fOHAxBPv62o3rP23Q/exec';
