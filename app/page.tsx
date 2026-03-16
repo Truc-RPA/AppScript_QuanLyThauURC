@@ -344,9 +344,10 @@ function ListTab({ listData, loadList, userRole, showToast }: { listData: Contra
         .filter(item => filterTrangThai === 'all' || item.trangThai === filterTrangThai)
         .filter(item => filterTinhTrang === 'all' || item.tinhTrang === filterTinhTrang)
         .sort((a, b) => {
-            const timeA = new Date(a.timestamp).getTime() || 0;
-            const timeB = new Date(b.timestamp).getTime() || 0;
-            return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+            // Thay vì parse Date rất dễ dính lỗi "Invalid Date" do format DD/MM/YYYY của VN,
+            // Ta dùng chính Row Index của Sheet để so sánh vì dữ liệu đổ vào Sheet luôn là tịnh tiến thời gian.
+            // Row lớn hơn = Mới hơn.
+            return sortOrder === 'desc' ? (b.rowIndex - a.rowIndex) : (a.rowIndex - b.rowIndex);
         });
 
     return (
