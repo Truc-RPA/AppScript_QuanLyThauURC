@@ -186,15 +186,20 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
             setForm(prev => ({ ...prev, nguoiPhuTrach: '', khuVuc: '' }));
             return;
         }
-        const match = settings.find(s => s.department === form.phongBan);
-        if (match) {
-            setForm(prev => ({
-                ...prev,
-                nguoiPhuTrach: match.name || '',
-                khuVuc: match.khuVuc || '',
-            }));
-        }
+        // Lọc người phụ trách và khu vực thuộc phòng ban vừa chọn
+        const matches = settings.filter(s => s.department === form.phongBan);
+        // Tự động điền nếu chỉ có 1 lựa chọn, nếu không thì reset để user tự chọn
+        setForm(prev => ({
+            ...prev,
+            nguoiPhuTrach: matches.length === 1 ? (matches[0].name || '') : '',
+            khuVuc: matches.length === 1 ? (matches[0].khuVuc || '') : '',
+        }));
     }, [form.phongBan, settings]);
+
+    // Danh sách Người phụ trách và Khu vực tương ứng với phòng ban hiện tại
+    const currentMatches = settings.filter(s => s.department === form.phongBan);
+    const phuTrachOptions = Array.from(new Set(currentMatches.map(s => s.name).filter(Boolean)));
+    const khuVucOptions = Array.from(new Set(currentMatches.map(s => s.khuVuc).filter(Boolean)));
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const newFiles = Array.from(e.target.files || []);
@@ -239,8 +244,24 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
                     <InputField label="Tên nhà thầu" required value={form.tenNhaThau} onChange={v => setForm({ ...form, tenNhaThau: v })} placeholder="Nhập tên công ty nhà thầu..." />
                     <SelectField label="Phòng ban" required value={form.phongBan} onChange={v => setForm({ ...form, phongBan: v })} options={departments} placeholder="-- Chọn phòng ban --" />
-                    <ReadOnlyField label="Người phụ trách" value={form.nguoiPhuTrach} placeholder="Tự động hiển thị khi chọn phòng ban" icon="👤" />
-                    <ReadOnlyField label="Khu vực thi công" value={form.khuVuc} placeholder="Tự động hiển thị khi chọn phòng ban" icon="📍" />
+                    <SelectField
+                        label="Người phụ trách"
+                        required
+                        value={form.nguoiPhuTrach}
+                        onChange={v => setForm({ ...form, nguoiPhuTrach: v })}
+                        options={phuTrachOptions}
+                        placeholder={form.phongBan ? "-- Chọn người phụ trách --" : "Vui lòng chọn phòng ban trước"}
+                        disabled={!form.phongBan || phuTrachOptions.length === 0}
+                    />
+                    <SelectField
+                        label="Khu vực thi công"
+                        required
+                        value={form.khuVuc}
+                        onChange={v => setForm({ ...form, khuVuc: v })}
+                        options={khuVucOptions}
+                        placeholder={form.phongBan ? "-- Chọn khu vực --" : "Vui lòng chọn phòng ban trước"}
+                        disabled={!form.phongBan || khuVucOptions.length === 0}
+                    />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Từ ngày <span className="text-red-500">*</span></label>
                             <input type="date" required value={form.tuNgay} onChange={e => setForm({ ...form, tuNgay: e.target.value })} className="form-input w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 bg-gray-50/50" /></div>
@@ -434,12 +455,17 @@ function InputField({ label, required, value, onChange, placeholder }: { label: 
     );
 }
 
-function SelectField({ label, required, value, onChange, options, placeholder }: { label: string; required?: boolean; value: string; onChange: (v: string) => void; options: string[]; placeholder: string }) {
+function SelectField({ label, required, value, onChange, options, placeholder, disabled }: { label: string, required?: boolean, value: string, onChange: (v: string) => void, options: string[], placeholder: string, disabled?: boolean }) {
     return (
         <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label} {required && <span className="text-red-500">*</span>}</label>
-            <select required={required} value={value} onChange={e => onChange(e.target.value)}
-                className="form-input w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 bg-gray-50/50">
+            <select
+                required={required}
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                disabled={disabled}
+                className={`form-input w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 bg-gray-50/50 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231f2937%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center] ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''}`}
+            >
                 <option value="">{placeholder}</option>
                 {options.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
