@@ -3,8 +3,11 @@ import { getSheetData } from '@/lib/google-sheets';
 
 export async function GET() {
     try {
-        const rows = await getSheetData('YeuCauURC', 'A1');
-        const content = rows?.[0]?.[0] || '';
+        const rows = await getSheetData('YeuCauURC', 'A1:A');
+        const content = rows
+            .map(row => row[0])
+            .filter(text => text !== undefined && text !== '')
+            .join('\n\n');
         return NextResponse.json({ content });
     } catch (error: any) {
         console.error('getUrcContent error:', error);
