@@ -186,13 +186,12 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
             setForm(prev => ({ ...prev, nguoiPhuTrach: '', khuVuc: '' }));
             return;
         }
-        // Lọc người phụ trách và khu vực thuộc phòng ban vừa chọn
-        const matches = settings.filter(s => s.department === form.phongBan);
-        // Tự động điền nếu chỉ có 1 lựa chọn, nếu không thì reset để user tự chọn
+        // Lọc người phụ trách và khu vực thuộc phòng ban vừa chọn (chỉ để lấy danh sách dội xuống SelectField)
+        // Yêu cầu mới: Bắt buộc user tự chọn chứ không tự động chọn dù chỉ có 1 option
         setForm(prev => ({
             ...prev,
-            nguoiPhuTrach: matches.length === 1 ? (matches[0].name || '') : '',
-            khuVuc: matches.length === 1 ? (matches[0].khuVuc || '') : '',
+            nguoiPhuTrach: '',
+            khuVuc: '',
         }));
     }, [form.phongBan, settings]);
 
