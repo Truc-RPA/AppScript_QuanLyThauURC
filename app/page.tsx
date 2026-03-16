@@ -303,6 +303,9 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
 // ==================== TAB 2: DANH SÁCH ====================
 function ListTab({ listData, loadList, userRole, showToast }: { listData: ContractorItem[]; loadList: () => Promise<void>; userRole: UserRole | null; showToast: (m: string, t: string) => void }) {
     const [loading, setLoading] = useState(false);
+    const [filterTrangThai, setFilterTrangThai] = useState<string>('all');
+    const [filterTinhTrang, setFilterTinhTrang] = useState<string>('all');
+    const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
     useEffect(() => { if (listData.length === 0) doLoad(); }, []);
     async function doLoad() { setLoading(true); await loadList(); setLoading(false); }
@@ -332,21 +335,63 @@ function ListTab({ listData, loadList, userRole, showToast }: { listData: Contra
         return buttons.length > 0 ? buttons : <span className="text-xs text-gray-400 italic">—</span>;
     }
 
+    // Lấy danh sách các Trạng thái & Tình trạng độc nhất để tạo dropdown tự động (hoặc fix cứng tuỳ chọn)
+    const uniqueTrangThai = Array.from(new Set(listData.map(i => i.trangThai).filter(Boolean)));
+    const uniqueTinhTrang = Array.from(new Set(listData.map(i => i.tinhTrang).filter(Boolean)));
+
+    // Áp dụng thuật toán Filter và Sort
+    const processedData = listData
+        .filter(item => filterTrangThai === 'all' || item.trangThai === filterTrangThai)
+        .filter(item => filterTinhTrang === 'all' || item.tinhTrang === filterTinhTrang)
+        .sort((a, b) => {
+            const timeA = new Date(a.timestamp).getTime() || 0;
+            const timeB = new Date(b.timestamp).getTime() || 0;
+            return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+        });
+
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
                 <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2"><span>📋</span> Danh sách đăng ký thi công</h2>
-                <button onClick={doLoad} className="btn-press text-sm bg-primary-50 text-primary-600 px-4 py-2 rounded-lg font-semibold hover:bg-primary-100 transition-colors flex items-center gap-1.5">🔄 Làm mới</button>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <button onClick={doLoad} className="btn-press text-sm bg-primary-50 text-primary-600 px-4 py-2 rounded-lg font-semibold hover:bg-primary-100 transition-colors flex items-center gap-1.5">🔄 Làm mới</button>
+                </div>
+            </div>
+
+            {/* Vùng thanh công cụ Bộ lọc */}
+            <div className="bg-gray-50/50 p-4 border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between">
+                <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="font-semibold text-gray-600">Trạng thái:</span>
+                        <select className="form-input px-3 py-1.5 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:border-primary-500" value={filterTrangThai} onChange={e => setFilterTrangThai(e.target.value)}>
+                            <option value="all">Tất cả</option>
+                            {uniqueTrangThai.map(st => <option key={st} value={st}>{st}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="font-semibold text-gray-600">Tình trạng:</span>
+                        <select className="form-input px-3 py-1.5 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:border-primary-500" value={filterTinhTrang} onChange={e => setFilterTinhTrang(e.target.value)}>
+                            <option value="all">Tất cả</option>
+                            {uniqueTinhTrang.map(tt => <option key={tt} value={tt}>{tt}</option>)}
+                        </select>
+                    </div>
+                </div>
+                <button
+                    onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                    className="btn-press flex items-center gap-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+                >
+                    Thời gian: {sortOrder === 'desc' ? 'Mới nhất ↓' : 'Cũ nhất ↑'}
+                </button>
             </div>
             {loading ? <div className="p-12 text-center"><div className="spinner mx-auto mb-3" /><p className="text-gray-400 text-sm">Đang tải danh sách...</p></div> :
-                listData.length === 0 ? <div className="p-12 text-center"><div className="text-5xl mb-3">📭</div><p className="text-gray-400 font-medium">Chưa có dữ liệu đăng ký nào</p></div> :
+                processedData.length === 0 ? <div className="p-12 text-center"><div className="text-5xl mb-3">📭</div><p className="text-gray-400 font-medium">Chưa có dữ liệu phù hợp với bộ lọc</p></div> :
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50/80">
                                 <tr>{['#', 'Nhà thầu', 'Phòng ban', 'Khu vực', 'Thời gian', 'Trạng thái', 'Tình trạng', 'Hồ sơ', 'Thao tác'].map(h => <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>)}</tr>
                             </thead>
                             <tbody>
-                                {listData.map((item, i) => (
+                                {processedData.map((item, i) => (
                                     <tr key={item.rowIndex} className="table-row border-b border-gray-50">
                                         <td className="px-4 py-3 text-gray-400 font-medium">{i + 1}</td>
                                         <td className="px-4 py-3"><div className="font-semibold text-gray-800">{item.tenNhaThau}</div><div className="text-xs text-gray-400 mt-0.5">{item.timestamp}</div></td>
