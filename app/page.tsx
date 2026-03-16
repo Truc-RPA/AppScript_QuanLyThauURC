@@ -180,20 +180,14 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
     // Lookup: Phòng ban (unique) từ cột A sheet CaiDat
     const departments = Array.from(new Set(settings.map(s => s.department).filter(Boolean)));
 
-    // Auto-fill Người phụ trách (cột C) + Khu vực (cột D) khi chọn Phòng ban
+    // Reset Người phụ trách & Khu vực khi đổi Phòng ban
     useEffect(() => {
-        if (!form.phongBan) {
-            setForm(prev => ({ ...prev, nguoiPhuTrach: '', khuVuc: '' }));
-            return;
-        }
-        // Lọc người phụ trách và khu vực thuộc phòng ban vừa chọn (chỉ để lấy danh sách dội xuống SelectField)
-        // Yêu cầu mới: Bắt buộc user tự chọn chứ không tự động chọn dù chỉ có 1 option
         setForm(prev => ({
             ...prev,
             nguoiPhuTrach: '',
             khuVuc: '',
         }));
-    }, [form.phongBan, settings]);
+    }, [form.phongBan]);
 
     // Danh sách Người phụ trách và Khu vực tương ứng với phòng ban hiện tại
     const currentMatches = settings.filter(s => s.department === form.phongBan);
