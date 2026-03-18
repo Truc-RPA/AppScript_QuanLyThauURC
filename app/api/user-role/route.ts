@@ -20,6 +20,7 @@ export async function GET() {
                 name: email === 'nga11789@gmail.com' ? 'Nga (Admin)' : 'Admin Tổng',
                 department: 'ADMIN',
                 areas: [],
+                spreadsheetId: process.env.SPREADSHEET_ID,
             });
         }
 
@@ -47,6 +48,7 @@ export async function GET() {
                         name: rowName || 'Admin',
                         department: 'ADMIN',
                         areas: rowAreas,
+                        spreadsheetId: process.env.SPREADSHEET_ID,
                     });
                 }
                 result = {
@@ -54,7 +56,7 @@ export async function GET() {
                     name: rowName,
                     department: rowDept,
                     areas: rowAreas,
-                };
+                } as any;
             }
         }
 
