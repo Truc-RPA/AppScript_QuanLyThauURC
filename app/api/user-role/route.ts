@@ -11,6 +11,18 @@ export async function GET() {
         }
 
         const email = session.user.email.toLowerCase().trim();
+
+        // YÊU CẦU MỚI: 2 Email này luôn là ADMIN
+        const admins = ['nga11789@gmail.com', 'mcontractor11789@gmail.com'];
+        if (admins.includes(email)) {
+            return NextResponse.json({
+                role: 'ADMIN',
+                name: email === 'nga11789@gmail.com' ? 'Nga (Admin)' : 'Admin Tổng',
+                department: 'ADMIN',
+                areas: [],
+            });
+        }
+
         const rows = await getSheetData('CaiDat');
 
         if (!rows || rows.length < 2) {

@@ -318,12 +318,20 @@ function ListTab({ listData, loadList, userRole, showToast }: { listData: Contra
     function getActionButtons(item: ContractorItem) {
         const role = userRole?.role;
         const buttons: React.ReactNode[] = [];
-        if (role === 'STAFF' && item.trangThai === 'Chờ xác minh')
-            buttons.push(<button key="v" onClick={() => handleAction(item.rowIndex, 'Verify')} className="btn-press px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition-colors shadow-sm">✓ Xác minh</button>);
+
         if (role === 'ADMIN') {
-            if (item.trangThai === 'Đã xác minh') buttons.push(<button key="a" onClick={() => handleAction(item.rowIndex, 'Approve')} className="btn-press px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-semibold hover:bg-emerald-600 transition-colors shadow-sm">✓ Phê duyệt</button>);
-            if (item.trangThai !== 'Đã hủy' && item.trangThai !== 'Hoàn thành') buttons.push(<button key="c" onClick={() => handleAction(item.rowIndex, 'Cancel')} className="btn-press px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors shadow-sm">✕ Hủy GP</button>);
-            if (item.trangThai === 'Đã phê duyệt') buttons.push(<button key="f" onClick={() => handleAction(item.rowIndex, 'Finish')} className="btn-press px-3 py-1.5 bg-gray-500 text-white rounded-lg text-xs font-semibold hover:bg-gray-600 transition-colors shadow-sm">🏁 Finish</button>);
+            // Cho phép duyệt thẳng từ Chờ xác minh hoặc Đã xác minh
+            if (item.trangThai === 'Chờ xác minh' || item.trangThai === 'Đã xác minh') {
+                buttons.push(<button key="a" onClick={() => handleAction(item.rowIndex, 'Approve')} className="btn-press px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-semibold hover:bg-emerald-600 transition-colors shadow-sm">✓ Phê duyệt</button>);
+            }
+
+            if (item.trangThai !== 'Đã hủy' && item.trangThai !== 'Hoàn thành') {
+                buttons.push(<button key="c" onClick={() => handleAction(item.rowIndex, 'Cancel')} className="btn-press px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors shadow-sm">✕ Hủy GP</button>);
+            }
+
+            if (item.trangThai === 'Đã phê duyệt') {
+                buttons.push(<button key="f" onClick={() => handleAction(item.rowIndex, 'Finish')} className="btn-press px-3 py-1.5 bg-gray-500 text-white rounded-lg text-xs font-semibold hover:bg-gray-600 transition-colors shadow-sm">🏁 Finish</button>);
+            }
         }
         return buttons.length > 0 ? buttons : <span className="text-xs text-gray-400 italic">—</span>;
     }
