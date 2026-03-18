@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
                     files: formattedFiles
                 };
 
-                const webhookUrl = process.env.GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbxX8IWwSIRig0qqwLItjf64vq1mQfZ_UVWLHymw1iVluRYpSFBT5fOHAxBPv62o3rP23Q/exec';
+                const webhookUrl = process.env.GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbRr_qugiPf4l_G5xglymHdyTG7XilxT1-o7MqCEhWDU2-er1bxImgOkomgblL4XkRUKg/exec';
                 const response = await fetch(webhookUrl, {
                     method: 'POST',
                     body: JSON.stringify(payload)
