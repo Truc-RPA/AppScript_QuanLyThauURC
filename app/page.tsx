@@ -217,7 +217,7 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
             let folderLink = '';
             let fileLink = '';
 
-            const webhookUrl = process.env.NEXT_PUBLIC_GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbw3psBNUhj_-UV-gwTXtJimn8PLI2_VyshlPcTWv_YWEPwXYO_1KAalWGIwzl_MXgSPfw/exec';
+            const webhookUrl = process.env.NEXT_PUBLIC_GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbyzyRsz0gST0LXQ9t84vrEhINiZnixzLFKDIEh5E35-Yct4SShBGcdJRoHHZHJ8amHVtA/exec';
             const parentFolderId = process.env.NEXT_PUBLIC_DRIVE_FOLDER_ID || '13af-MkmWG5UPrgzkF7pCPGhen18ZbL-i';
 
             if (files.length > 0) {
