@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSheetData } from '@/lib/google-sheets';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
@@ -18,9 +20,9 @@ export async function GET() {
 
             settings.push({
                 department: dept,
-                name: (row[1] || '').trim(),
-                nguoiPhuTrach: (row[2] || '').trim(),  // Cột C
-                khuVuc: (row[3] || '').trim(),          // Cột D
+                name: (row[1] || '').trim(),           // Cột B: Người phụ trách
+                email: (row[2] || '').trim(),          // Cột C: Email
+                khuVuc: (row[3] || '').trim(),         // Cột D: Khu vực
             });
         }
 
