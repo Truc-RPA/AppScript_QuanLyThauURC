@@ -209,46 +209,62 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
         if (new Date(form.denNgay) < new Date(form.tuNgay)) { showToast('Ngày kết thúc phải sau ngày bắt đầu!', 'error'); return; }
 
         const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-        if (totalSize > 50 * 1024 * 1024) { showToast('Tổng dung lượng file vượt quá 50MB!', 'error'); return; }
+        // Tăng giới hạn lên vì ta đã chia nhỏ từng file để gửi
+        if (totalSize > 100 * 1024 * 1024) { showToast('Tổng dung lượng file vượt quá 100MB!', 'error'); return; }
 
         setSubmitting(true);
         try {
             let folderLink = '';
             let fileLink = '';
 
-            // 1. Tải file thẳng lên GAS từ Client (để tránh giới hạn 4.5MB của Vercel)
             const webhookUrl = process.env.NEXT_PUBLIC_GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbw3psBNUhj_-UV-gwTXtJimn8PLI2_VyshlPcTWv_YWEPwXYO_1KAalWGIwzl_MXgSPfw/exec';
             const parentFolderId = process.env.NEXT_PUBLIC_DRIVE_FOLDER_ID || '13af-MkmWG5UPrgzkF7pCPGhen18ZbL-i';
 
-            if (files.length > 0 && webhookUrl && parentFolderId) {
-                const filesData = await Promise.all(files.map(async f => {
+            if (files.length > 0) {
+                // Bước 1: Tạo folder trên Drive trước
+                // Không set Content-Type để tránh lỗi CORS Preflight
+                const createRes = await fetch(webhookUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'create',
+                        parentFolderId,
+                        folderName: `${form.tenNhaThau}_${new Date().toISOString().split('T')[0]}`
+                    })
+                }).then(r => r.json());
+
+                if (!createRes.success) throw new Error('Lỗi tạo thư mục: ' + createRes.error);
+
+                const folderId = createRes.folderId;
+                folderLink = createRes.folderUrl;
+                const uploadedLinks: string[] = [];
+
+                // Bước 2: Tải lên từng file một (Sequential Upload)
+                // Việc gửi từng file giúp tránh lỗi 413 (Quá tải dung lượng/Request Entity Too Large)
+                for (let i = 0; i < files.length; i++) {
+                    const f = files[i];
                     const base64 = await toBase64(f);
                     const mimeType = f.name.endsWith('.pdf') ? 'application/pdf' :
                         (f.name.endsWith('.png') ? 'image/png' : 'image/jpeg');
-                    return { name: f.name, base64, mimeType };
-                }));
 
-                const payload = {
-                    parentFolderId: parentFolderId,
-                    folderName: `${form.tenNhaThau}_${new Date().toISOString().split('T')[0]}`,
-                    files: filesData
-                };
+                    const uploadRes = await fetch(webhookUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'upload',
+                            folderId,
+                            file: { name: f.name, base64, mimeType }
+                        })
+                    }).then(r => r.json());
 
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-
-                const responseData = await response.json();
-                if (responseData.success) {
-                    folderLink = responseData.folderUrl || '';
-                    fileLink = (responseData.fileUrls || []).join('\n');
-                } else {
-                    throw new Error('Không thể tải file lên Drive: ' + responseData.error);
+                    if (uploadRes.success) {
+                        uploadedLinks.push(uploadRes.fileUrl);
+                    } else {
+                        console.error('Lỗi tải file:', f.name, uploadRes.error);
+                    }
                 }
+                fileLink = uploadedLinks.join('\n');
             }
 
-            // 2. Gửi dữ liệu và link file cho Next.js để ghi vào Sheet
+            // Bước 3: Ghi dữ liệu vào Sheet
             const res = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -264,7 +280,7 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
                 showToast(result.message, 'error');
             }
         } catch (err: any) {
-            showToast('Lỗi: ' + (err.message === 'Failed to fetch' ? 'Lỗi kết nối Webhook (CORS/Network). Vui lòng kiểm tra lại Link GAS.' : err.message), 'error');
+            showToast('Lỗi: ' + (err.message === 'Failed to fetch' ? 'Lỗi kết nối Webhook (Bạn cần cập nhật lại code GAS mới nhất).' : err.message), 'error');
         } finally {
             setSubmitting(false);
         }
