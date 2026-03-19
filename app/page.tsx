@@ -217,8 +217,8 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
             let fileLink = '';
 
             // 1. Tải file thẳng lên GAS từ Client (để tránh giới hạn 4.5MB của Vercel)
-            const webhookUrl = process.env.NEXT_PUBLIC_GAS_WEBHOOK_URL;
-            const parentFolderId = process.env.NEXT_PUBLIC_DRIVE_FOLDER_ID;
+            const webhookUrl = process.env.NEXT_PUBLIC_GAS_WEBHOOK_URL || 'https://script.google.com/macros/s/AKfycbw3psBNUhj_-UV-gwTXtJimn8PLI2_VyshlPcTWv_YWEPwXYO_1KAalWGIwzl_MXgSPfw/exec';
+            const parentFolderId = process.env.NEXT_PUBLIC_DRIVE_FOLDER_ID || '13af-MkmWG5UPrgzkF7pCPGhen18ZbL-i';
 
             if (files.length > 0 && webhookUrl && parentFolderId) {
                 const filesData = await Promise.all(files.map(async f => {
