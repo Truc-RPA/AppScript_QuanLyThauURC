@@ -207,21 +207,67 @@ function RegistrationTab({ settings, showToast }: { settings: Setting[]; showToa
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (new Date(form.denNgay) < new Date(form.tuNgay)) { showToast('Ngày kết thúc phải sau ngày bắt đầu!', 'error'); return; }
+
         const totalSize = files.reduce((sum, f) => sum + f.size, 0);
         if (totalSize > 50 * 1024 * 1024) { showToast('Tổng dung lượng file vượt quá 50MB!', 'error'); return; }
+
         setSubmitting(true);
         try {
-            const filesData = await Promise.all(files.map(async f => ({
-                name: f.name,
-                data: await toBase64(f),
-                size: f.size,
-            })));
-            const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, files: filesData }) });
+            let folderLink = '';
+            let fileLink = '';
+
+            // 1. Tải file thẳng lên GAS từ Client (để tránh giới hạn 4.5MB của Vercel)
+            const webhookUrl = process.env.NEXT_PUBLIC_GAS_WEBHOOK_URL;
+            const parentFolderId = process.env.NEXT_PUBLIC_DRIVE_FOLDER_ID;
+
+            if (files.length > 0 && webhookUrl && parentFolderId) {
+                const filesData = await Promise.all(files.map(async f => {
+                    const base64 = await toBase64(f);
+                    const mimeType = f.name.endsWith('.pdf') ? 'application/pdf' :
+                        (f.name.endsWith('.png') ? 'image/png' : 'image/jpeg');
+                    return { name: f.name, base64, mimeType };
+                }));
+
+                const payload = {
+                    parentFolderId: parentFolderId,
+                    folderName: `${form.tenNhaThau}_${new Date().toISOString().split('T')[0]}`,
+                    files: filesData
+                };
+
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                const responseData = await response.json();
+                if (responseData.success) {
+                    folderLink = responseData.folderUrl || '';
+                    fileLink = (responseData.fileUrls || []).join('\n');
+                } else {
+                    throw new Error('Không thể tải file lên Drive: ' + responseData.error);
+                }
+            }
+
+            // 2. Gửi dữ liệu và link file cho Next.js để ghi vào Sheet
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...form, folderLink, fileLink })
+            });
             const result = await res.json();
-            if (result.success) { showToast(result.message, 'success'); setForm({ tenNhaThau: '', phongBan: '', nguoiPhuTrach: '', khuVuc: '', tuNgay: '', denNgay: '', hangMuc: '' }); setFiles([]); }
-            else showToast(result.message, 'error');
-        } catch (err: any) { showToast('Lỗi: ' + err.message, 'error'); }
-        setSubmitting(false);
+
+            if (result.success) {
+                showToast(result.message, 'success');
+                setForm({ tenNhaThau: '', phongBan: '', nguoiPhuTrach: '', khuVuc: '', tuNgay: '', denNgay: '', hangMuc: '' });
+                setFiles([]);
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (err: any) {
+            showToast('Lỗi: ' + (err.message === 'Failed to fetch' ? 'Lỗi kết nối Webhook (CORS/Network). Vui lòng kiểm tra lại Link GAS.' : err.message), 'error');
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     return (
